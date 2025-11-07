@@ -14,6 +14,8 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
+  Checkbox,
+  FormControlLabel,
 } from "@mui/material"
 import { Formik, Form, Field, ErrorMessage } from "formik"
 import * as Yup from "yup"
@@ -30,10 +32,15 @@ const validationSchema = Yup.object({
 export default function RegisterPage() {
   const navigate = useNavigate()
   const [error, setError] = useState("")
+  const [isAdminRegistration, setIsAdminRegistration] = useState(false)
 
   const handleSubmit = async (values) => {
     try {
-      await authAPI.register({ ...values, role: "citizen" })
+      const registrationData = {
+        ...values,
+        ...(isAdminRegistration && { adminCode: values.adminCode }),
+      }
+      await authAPI.register(registrationData)
       navigate("/login")
     } catch (err) {
       setError(err.response?.data?.message || "Registration failed")
@@ -61,6 +68,7 @@ export default function RegisterPage() {
               password: "",
               area: "",
               phone: "",
+              adminCode: "",
             }}
             validationSchema={validationSchema}
             onSubmit={handleSubmit}
@@ -123,6 +131,30 @@ export default function RegisterPage() {
                   error={touched.phone && !!errors.phone}
                   helperText={<ErrorMessage name="phone" />}
                 />
+
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={isAdminRegistration}
+                      onChange={(e) => setIsAdminRegistration(e.target.checked)}
+                    />
+                  }
+                  label="Register as Admin"
+                  sx={{ mt: 2, mb: 2 }}
+                />
+
+                {isAdminRegistration && (
+                  <Field
+                    as={TextField}
+                    fullWidth
+                    label="Admin Setup Code"
+                    name="adminCode"
+                    type="password"
+                    margin="normal"
+                    error={touched.adminCode && !!errors.adminCode}
+                    helperText="Enter the admin setup code provided by the system administrator"
+                  />
+                )}
 
                 <Button fullWidth variant="contained" sx={{ mt: 3, mb: 2 }} type="submit">
                   Register

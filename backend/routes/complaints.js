@@ -8,9 +8,7 @@ const router = express.Router()
 // Get user's complaints
 router.get("/", verifyToken, async (req, res) => {
   try {
-    const complaints = await Complaint.find({ userId: req.userId })
-      .populate("createdBy", "name")
-      .sort({ createdAt: -1 })
+    const complaints = await Complaint.find({ userId: req.userId }).populate("userId", "name").sort({ createdAt: -1 })
     res.json(complaints)
   } catch (error) {
     res.status(500).json({ message: error.message })

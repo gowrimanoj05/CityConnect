@@ -4,13 +4,20 @@ import User from "../models/User.js"
 
 const router = express.Router()
 
+const ADMIN_SETUP_CODE = process.env.ADMIN_SETUP_CODE || "ADMIN_SECRET_2024"
+
 router.post("/register", async (req, res) => {
   try {
-    const { name, email, password, area, phone, role = "citizen" } = req.body
+    const { name, email, password, area, phone, adminCode } = req.body
 
     let user = await User.findOne({ email })
     if (user) {
       return res.status(400).json({ message: "User already exists" })
+    }
+
+    let role = "citizen"
+    if (adminCode === ADMIN_SETUP_CODE) {
+      role = "admin"
     }
 
     user = new User({ name, email, password, area, phone, role })
