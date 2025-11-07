@@ -8,7 +8,7 @@ const ADMIN_SETUP_CODE = process.env.ADMIN_SETUP_CODE || "ADMIN_SECRET_2024"
 
 router.post("/register", async (req, res) => {
   try {
-    const { name, email, password, area, phone, adminCode } = req.body
+    const { name, email, password, address, area, phone, adminCode } = req.body
 
     let user = await User.findOne({ email })
     if (user) {
@@ -20,7 +20,7 @@ router.post("/register", async (req, res) => {
       role = "admin"
     }
 
-    user = new User({ name, email, password, area, phone, role })
+    user = new User({ name, email, password, address, area, phone, role })
     await user.save()
 
     const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "7d" })

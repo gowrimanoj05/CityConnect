@@ -14,6 +14,7 @@ const complaintSchema = new mongoose.Schema({
     enum: ["water", "electricity", "road", "sanitation", "other"],
     required: true,
   },
+  address: String,
   area: String,
   status: {
     type: String,
