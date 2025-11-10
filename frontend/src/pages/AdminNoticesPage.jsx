@@ -38,11 +38,16 @@ export default function AdminNoticesPage() {
 
   const filteredNotices = filterCategory ? notices.filter((n) => n.category === filterCategory) : notices
 
-  if (loading) return <CircularProgress />
+  if (loading)
+    return (
+      <Box sx={{ display: "flex", justifyContent: "center", mt: 8 }}>
+        <CircularProgress />
+      </Box>
+    )
 
   return (
     <Box>
-      <Typography variant="h5" sx={{ mb: 2 }}>
+      <Typography variant="h5" sx={{ mb: 3, fontWeight: 600 }}>
         All Notices
       </Typography>
 
@@ -59,18 +64,23 @@ export default function AdminNoticesPage() {
 
       {error && <Typography color="error">{error}</Typography>}
 
-      <Box sx={{ display: "grid", gap: 2 }}>
+      <Box sx={{ display: "grid", gap: 2, mt: 2 }}>
         {filteredNotices.map((notice) => (
-          <Card key={notice._id}>
+          <Card key={notice._id} sx={{ borderRadius: 3, boxShadow: 3, transition: "0.3s", "&:hover": { boxShadow: 6 } }}>
             <CardContent>
               <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
-                <Typography variant="h6">{notice.title}</Typography>
-                <Chip label={notice.category} size="small" />
+                <Typography variant="h6" fontWeight={500}>
+                  {notice.title}
+                </Typography>
+                <Chip label={notice.category} color="primary" size="small" />
               </Box>
-              <Typography variant="body2" color="textSecondary" sx={{ mb: 1 }}>
-                Area: {notice.area} • By {notice.createdBy?.name} • {new Date(notice.createdAt).toLocaleDateString()}
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                Area: <b>{notice.area}</b> • By {notice.createdBy?.name} •{" "}
+                {new Date(notice.createdAt).toLocaleDateString()}
               </Typography>
-              <Typography variant="body1">{notice.content}</Typography>
+              <Typography variant="body1" sx={{ lineHeight: 1.6 }}>
+                {notice.content}
+              </Typography>
             </CardContent>
           </Card>
         ))}

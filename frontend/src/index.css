@@ -1,26 +1,111 @@
 :root {
-  --primary: #1976d2;
-  --secondary: #dc004e;
+  /* Primary Theme Colors */
+  --primary: #1976d2;      /* MUI Default Blue */
+  --primary-light: #63a4ff;
+  --primary-dark: #004ba0;
+
+  --secondary: #dc004e;    /* Vibrant Accent */
+  --secondary-light: #ff5c8d;
+  --secondary-dark: #9a0036;
+
+  /* Status Colors */
   --success: #4caf50;
   --warning: #ff9800;
-  --danger: #f44336;
-  --light: #f5f5f5;
-  --dark: #333;
+  --error: #f44336;
+  --info: #0288d1;
+
+  /* Background & Surface */
+  --background: #f5f6fa;
+  --card-bg: #ffffff;
+  --hover-bg: #f0f4ff;
+
+  /* Text */
+  --text-primary: #212121;
+  --text-secondary: #616161;
+  --text-light: #9e9e9e;
+
+  /* Border & Shadow */
+  --border-color: #e0e0e0;
+  --shadow-light: 0 2px 8px rgba(0, 0, 0, 0.05);
+  --shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.1);
+
+  /* Dark Mode Support (optional toggle in future) */
+  --dark-bg: #121212;
+  --dark-card: #1e1e1e;
+  --dark-text: #e0e0e0;
+  --dark-border: #333;
 }
 
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 body {
   font-family: "Roboto", sans-serif;
-  background-color: var(--light);
-  color: var(--dark);
+  background-color: var(--background);
+  color: var(--text-primary);
+  line-height: 1.6;
+  min-height: 100vh;
 }
 
 #root {
   width: 100%;
   min-height: 100vh;
+}
+
+/* Typography Enhancements */
+h1, h2, h3, h4, h5 {
+  color: var(--text-primary);
+  letter-spacing: 0.3px;
+  font-weight: 600;
+}
+
+p, span, label, input, button, li {
+  color: var(--text-secondary);
+}
+
+/* Cards */
+.MuiPaper-root, .MuiCard-root {
+  border-radius: 12px !important;
+  box-shadow: var(--shadow-light);
+}
+
+/* Buttons */
+.MuiButton-contained {
+  border-radius: 8px !important;
+  text-transform: none !important;
+  font-weight: 500;
+  box-shadow: var(--shadow-light);
+}
+
+.MuiButton-contained:hover {
+  background-color: var(--primary-dark) !important;
+  box-shadow: var(--shadow-medium);
+}
+
+/* Input Fields */
+.MuiTextField-root, .MuiSelect-root {
+  background-color: var(--card-bg);
+  border-radius: 8px;
+}
+
+/* Chips & Badges */
+.MuiChip-root {
+  border-radius: 6px !important;
+  font-weight: 500;
+}
+
+/* Scrollbar styling for better UX */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--primary);
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-dark);
 }

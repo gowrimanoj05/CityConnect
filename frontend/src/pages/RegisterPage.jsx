@@ -49,9 +49,9 @@ export default function RegisterPage() {
 
   return (
     <Container maxWidth="sm">
-      <Box sx={{ mt: 4, mb: 4 }}>
-        <Paper sx={{ p: 4 }}>
-          <Typography variant="h4" component="h1" sx={{ mb: 3, textAlign: "center" }}>
+      <Box sx={{ mt: 6, mb: 4 }}>
+        <Paper sx={{ p: 4, borderRadius: 3, boxShadow: 4 }}>
+          <Typography variant="h4" sx={{ mb: 3, textAlign: "center", fontWeight: 600 }}>
             Register
           </Typography>
 
@@ -75,37 +75,9 @@ export default function RegisterPage() {
           >
             {({ errors, touched, values, setFieldValue }) => (
               <Form>
-                <Field
-                  as={TextField}
-                  fullWidth
-                  label="Full Name"
-                  name="name"
-                  margin="normal"
-                  error={touched.name && !!errors.name}
-                  helperText={<ErrorMessage name="name" />}
-                />
-
-                <Field
-                  as={TextField}
-                  fullWidth
-                  label="Email"
-                  name="email"
-                  type="email"
-                  margin="normal"
-                  error={touched.email && !!errors.email}
-                  helperText={<ErrorMessage name="email" />}
-                />
-
-                <Field
-                  as={TextField}
-                  fullWidth
-                  label="Password"
-                  name="password"
-                  type="password"
-                  margin="normal"
-                  error={touched.password && !!errors.password}
-                  helperText={<ErrorMessage name="password" />}
-                />
+                <Field as={TextField} fullWidth label="Full Name" name="name" margin="normal" />
+                <Field as={TextField} fullWidth label="Email" name="email" margin="normal" type="email" />
+                <Field as={TextField} fullWidth label="Password" name="password" margin="normal" type="password" />
 
                 <FormControl fullWidth margin="normal">
                   <InputLabel>Area</InputLabel>
@@ -122,15 +94,7 @@ export default function RegisterPage() {
                   </Select>
                 </FormControl>
 
-                <Field
-                  as={TextField}
-                  fullWidth
-                  label="Phone"
-                  name="phone"
-                  margin="normal"
-                  error={touched.phone && !!errors.phone}
-                  helperText={<ErrorMessage name="phone" />}
-                />
+                <Field as={TextField} fullWidth label="Phone" name="phone" margin="normal" />
 
                 <FormControlLabel
                   control={
@@ -151,7 +115,6 @@ export default function RegisterPage() {
                     name="adminCode"
                     type="password"
                     margin="normal"
-                    error={touched.adminCode && !!errors.adminCode}
                     helperText="Enter the admin setup code provided by the system administrator"
                   />
                 )}

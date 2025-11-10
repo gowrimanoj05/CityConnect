@@ -14,6 +14,7 @@ import {
   InputLabel,
   Button,
   TextField,
+  Divider,
 } from "@mui/material"
 import { complaintAPI } from "../api/api.js"
 
@@ -71,12 +72,12 @@ export default function AdminComplaintsPage() {
 
   const filteredComplaints = filterStatus ? complaints.filter((c) => c.status === filterStatus) : complaints
 
-  if (loading) return <CircularProgress />
+  if (loading) return <Box sx={{ display: "flex", justifyContent: "center", mt: 8 }}><CircularProgress /></Box>
 
   return (
-    <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 3 }}>
+    <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 3, mt: 2 }}>
       <Box>
-        <Typography variant="h5" sx={{ mb: 2 }}>
+        <Typography variant="h5" sx={{ mb: 3, fontWeight: 600 }}>
           All Complaints
         </Typography>
 
@@ -91,7 +92,7 @@ export default function AdminComplaintsPage() {
           </Select>
         </FormControl>
 
-        {error && <Typography color="error">{error}</Typography>}
+        {error && <Typography color="error" sx={{ mb: 1 }}>{error}</Typography>}
 
         <Box sx={{ display: "grid", gap: 2 }}>
           {filteredComplaints.map((complaint) => (
@@ -100,16 +101,19 @@ export default function AdminComplaintsPage() {
               onClick={() => setSelectedComplaint(complaint)}
               sx={{
                 cursor: "pointer",
-                border: selectedComplaint?._id === complaint._id ? "2px solid blue" : "none",
+                transition: "0.3s",
+                boxShadow: selectedComplaint?._id === complaint._id ? 5 : 1,
+                "&:hover": { boxShadow: 5 },
+                borderRadius: 2,
               }}
             >
               <CardContent>
                 <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
-                  <Typography variant="h6">{complaint.title}</Typography>
+                  <Typography variant="h6" fontWeight={500}>{complaint.title}</Typography>
                   <Chip label={complaint.status} color={getStatusColor(complaint.status)} size="small" />
                 </Box>
-                <Typography variant="body2" color="textSecondary">
-                  From {complaint.userId?.name} • {complaint.userId?.area}
+                <Typography variant="body2" color="text.secondary">
+                  From <b>{complaint.userId?.name}</b> • {complaint.userId?.area}
                 </Typography>
               </CardContent>
             </Card>
@@ -119,29 +123,25 @@ export default function AdminComplaintsPage() {
 
       {selectedComplaint && (
         <Box>
-          <Card>
+          <Card sx={{ borderRadius: 3, boxShadow: 4 }}>
             <CardContent>
-              <Typography variant="h5" sx={{ mb: 2 }}>
+              <Typography variant="h5" sx={{ mb: 2, fontWeight: 600 }}>
                 {selectedComplaint.title}
               </Typography>
 
               <Box sx={{ mb: 2 }}>
-                <Typography variant="body2" sx={{ mb: 1 }}>
-                  <strong>Citizen:</strong> {selectedComplaint.userId?.name}
-                </Typography>
-                <Typography variant="body2" sx={{ mb: 1 }}>
-                  <strong>Email:</strong> {selectedComplaint.userId?.email}
-                </Typography>
-                <Typography variant="body2" sx={{ mb: 1 }}>
-                  <strong>Area:</strong> {selectedComplaint.userId?.area}
-                </Typography>
+                <Typography variant="body2"><strong>Citizen:</strong> {selectedComplaint.userId?.name}</Typography>
+                <Typography variant="body2"><strong>Email:</strong> {selectedComplaint.userId?.email}</Typography>
+                <Typography variant="body2"><strong>Area:</strong> {selectedComplaint.userId?.area}</Typography>
               </Box>
 
-              <Typography variant="body1" sx={{ mb: 2 }}>
+              <Divider sx={{ mb: 2 }} />
+
+              <Typography variant="body1" sx={{ mb: 2, lineHeight: 1.6 }}>
                 {selectedComplaint.description}
               </Typography>
 
-              <FormControl fullWidth sx={{ mb: 2 }}>
+              <FormControl fullWidth sx={{ mb: 3 }}>
                 <InputLabel>Status</InputLabel>
                 <Select
                   value={selectedComplaint.status}
@@ -155,16 +155,16 @@ export default function AdminComplaintsPage() {
                 </Select>
               </FormControl>
 
-              <Typography variant="h6" sx={{ mb: 1 }}>
+              <Typography variant="h6" sx={{ mb: 1, fontWeight: 500 }}>
                 Comments
               </Typography>
-              <Box sx={{ mb: 2, maxHeight: 200, overflow: "auto", p: 1, bgcolor: "#f5f5f5", borderRadius: 1 }}>
+              <Box sx={{ mb: 2, maxHeight: 200, overflow: "auto", p: 2, bgcolor: "#f9f9f9", borderRadius: 2 }}>
                 {selectedComplaint.comments?.map((c, idx) => (
                   <Box key={idx} sx={{ mb: 1 }}>
-                    <Typography variant="body2" sx={{ fontWeight: "bold" }}>
+                    <Typography variant="body2" fontWeight="bold">
                       {c.author?.name || "Admin"}
                     </Typography>
-                    <Typography variant="body2">{c.text}</Typography>
+                    <Typography variant="body2" color="text.secondary">{c.text}</Typography>
                   </Box>
                 ))}
               </Box>
@@ -176,7 +176,7 @@ export default function AdminComplaintsPage() {
                 onChange={(e) => setComment(e.target.value)}
                 multiline
                 rows={2}
-                sx={{ mb: 1 }}
+                sx={{ mb: 2 }}
               />
               <Button variant="contained" fullWidth onClick={handleAddComment}>
                 Add Comment

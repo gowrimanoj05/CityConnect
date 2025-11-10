@@ -25,46 +25,57 @@ export default function AdminStatsPage() {
         openComplaints: complaintsRes.data.filter((c) => c.status === "open").length,
         totalNotices: noticesRes.data.length,
       })
-    } catch (error) {
+    } catch {
       console.error("Failed to fetch stats")
     }
   }
 
   const statCards = [
-    { title: "Total Complaints", value: stats.totalComplaints, color: "#ff9800" },
+    { title: "Total Complaints", value: stats.totalComplaints, color: "#1976d2" },
     { title: "Open Complaints", value: stats.openComplaints, color: "#f44336" },
-    { title: "Total Notices", value: stats.totalNotices, color: "#2196f3" },
+    { title: "Total Notices", value: stats.totalNotices, color: "#4caf50" },
   ]
 
   return (
     <Box>
-      <Typography variant="h4" sx={{ mb: 3 }}>
-        Admin Dashboard
+      <Typography variant="h4" sx={{ mb: 3, fontWeight: 600 }}>
+        Admin Dashboard Overview
       </Typography>
 
-      <Grid container spacing={2} sx={{ mb: 4 }}>
+      <Grid container spacing={3} sx={{ mb: 4 }}>
         {statCards.map((card) => (
           <Grid item xs={12} sm={6} md={4} key={card.title}>
-            <Card sx={{ bgcolor: card.color, color: "white" }}>
+            <Card
+              sx={{
+                bgcolor: card.color,
+                color: "white",
+                textAlign: "center",
+                py: 2,
+                borderRadius: 3,
+                boxShadow: 4,
+              }}
+            >
               <CardContent>
-                <Typography variant="h6">{card.title}</Typography>
-                <Typography variant="h3">{card.value}</Typography>
+                <Typography variant="h6" sx={{ opacity: 0.9 }}>
+                  {card.title}
+                </Typography>
+                <Typography variant="h3" fontWeight={600}>
+                  {card.value}
+                </Typography>
               </CardContent>
             </Card>
           </Grid>
         ))}
       </Grid>
 
-      <Card>
+      <Card sx={{ borderRadius: 3, boxShadow: 3 }}>
         <CardContent>
-          <Typography variant="h6" sx={{ mb: 2 }}>
+          <Typography variant="h6" sx={{ mb: 1, fontWeight: 500 }}>
             Quick Actions
           </Typography>
-          <Typography variant="body2" sx={{ mb: 1 }}>
-            Use the sidebar to manage complaints, post notices, and monitor service requests.
-          </Typography>
-          <Typography variant="body2">
-            All citizen complaints are tracked with status updates for better transparency.
+          <Typography variant="body2" color="text.secondary">
+            Use the sidebar to manage complaints, post new notices, and monitor service requests in real-time. Stay
+            updated with all ongoing citizen activities and issues for your area.
           </Typography>
         </CardContent>
       </Card>

@@ -31,8 +31,8 @@ export default function LoginPage() {
   return (
     <Container maxWidth="sm">
       <Box sx={{ mt: 8, mb: 4 }}>
-        <Paper sx={{ p: 4 }}>
-          <Typography variant="h4" component="h1" sx={{ mb: 3, textAlign: "center" }}>
+        <Paper sx={{ p: 4, borderRadius: 3, boxShadow: 4 }}>
+          <Typography variant="h4" component="h1" sx={{ mb: 3, textAlign: "center", fontWeight: 600 }}>
             City Service Portal
           </Typography>
 

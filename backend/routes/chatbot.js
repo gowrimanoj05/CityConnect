@@ -1,116 +1,96 @@
-// backend/routes/chatbot.js
-import express from "express";
-import axios from "axios";
-import { verifyToken } from "../middleware/auth.js";
-import ChatLog from "../models/ChatLog.js";
-import Complaint from "../models/Complaint.js";
-import User from "../models/User.js";
+import express from "express"
+import { GoogleGenerativeAI } from "@google/generative-ai"
+import { verifyToken } from "../middleware/auth.js"
+import ChatLog from "../models/ChatLog.js"
+import Complaint from "../models/Complaint.js"
+import User from "../models/User.js"
 
-const router = express.Router();
+const router = express.Router()
 
-// ✅ Gemini API endpoint
-const GEMINI_API_URL =
-  "https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent";
+if (!process.env.GEMINI_API_KEY) {
+  console.error("[v0] GEMINI_API_KEY environment variable is not set")
+}
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
 
-// ✅ System prompt
-const SYSTEM_PROMPT = `
-You are an intelligent city service support chatbot. Your role is to:
-1. Understand citizen problems related to city services (water, electricity, roads, sanitation, etc.)
-2. Determine if the issue is solvable by the citizen with simple steps or requires professional help
-3. Provide clear step-by-step solutions for solvable issues
-4. Clearly state when professional help is needed
+const SYSTEM_PROMPT = `You are an intelligent city service support chatbot. Your role is to:
+1. Understand citizen problems related to a wide range of city and household services (water, electricity, roads, sanitation, medical, public safety, building maintenance, public facilities, and environmental issues).
+2. Determine if the issue is solvable by the citizen with simple steps or requires professional/city help.
+3. Provide clear step-by-step solutions for solvable issues (including immediate safety actions and temporary fixes).
+4. Clearly state when professional help is needed and provide appropriate emergency/non-emergency contact information.
 
 For each user message, respond ONLY with a JSON object in this exact format:
 {
   "botResponse": "Your helpful response text here",
-  "category": "water/electricity/road/sanitation/other",
+  "category": "water/electricity/road/sanitation/medical/safety/building/environment/other",
   "isSolvable": true/false,
-  "priority": "low/medium/high",
+  "priority": "low/medium/high/emergency",
   "suggestedTitle": "Brief title for the issue if complaint needed"
 }
 
 Rules:
-- Urgent/emergency words → priority = high
-- "soon", "quickly", "fast" → priority = medium
-- Otherwise → priority = low
-- Water/electricity → solvable with steps (isSolvable: true)
-- Road/sanitation/structural → needs complaint (isSolvable: false)
-- Always respond with **pure JSON** (no markdown, no backticks, no explanations).
-`;
+- **Category Logic (Mandatory Assignments):**
+    - **medical:** MUST be assigned if the message contains keywords: **heart attack, stroke, seizure, unconscious, cannot breathe, choking, severe bleeding, ambulance, medical emergency, collapsed.**
+    - **safety:** Assigned for non-medical immediate public hazards, crime, or structural/electrical dangers.
+    - **water/electricity/road/sanitation/building/environment/other:** Assigned based on the core topic when not a medical/safety emergency.
+
+- **Priority Logic (Absolute Overrides & Time Factor):**
+    - **emergency (Highest Priority - Mandatory):** MUST be assigned if the message falls under the 'medical' category or contains keywords indicating immediate threat to life/health (e.g., **fire, gas leak, exposed live wire, active crime, major life-threatening injury**). **This overrides all other priority rules.**
+    - **high:** Loss of essential services (water/electricity) for **more than four hours or across multiple days**, significant public hazard, or major failure (e.g., **complete** power outage, **no** water supply, overflowing main sewer, significant road obstruction, large tree down, severe leaks inside a home). Includes words/phrases like: **severe, main, hazard, serious, critical, widespread, major, since yesterday, for hours, total loss, complete outage.**
+    - **medium:** Partial service interruption, significant inconvenience, or non-critical issues that require prompt attention (e.g., low water pressure, intermittent power, single street light out, minor road damage, delayed trash collection). Includes words like: **soon, quickly, fast, urgent, important.**
+    - **low (Default):** Aesthetic, minor, or long-term administrative issues (e.g., faded road marking, minor pothole, general inquiry, missed recycling pickup). Otherwise default to **low**.
+
+- **Solvability Logic:**
+    - **isSolvable: true:** Issues manageable by the citizen (e.g., tripped breaker, single faucet leak, checking own shut-off valve, reporting a specific location, first response to a utility issue).
+    - **isSolvable: false:** Issues requiring city intervention, professional resources, or public works maintenance (e.g., **city** water/power outage, sewer backup in the street, road repair, public facility repair, **or any time the citizen confirms they have completed initial troubleshooting steps without success**).
+
+- Always respond with **pure JSON** (no markdown, no backticks, no explanations).`
 
 router.post("/message", verifyToken, async (req, res) => {
   try {
-    const { message } = req.body;
+    const { message } = req.body
 
-    if (!message?.trim()) {
-      return res.status(400).json({ message: "Message cannot be empty" });
+    if (!message || message.trim().length === 0) {
+      return res.status(400).json({ message: "Message cannot be empty" })
     }
 
-    if (!process.env.GEMINI_API_KEY) {
-      return res
-        .status(503)
-        .json({ message: "Chatbot unavailable — GEMINI_API_KEY not configured." });
+    const user = await User.findById(req.userId)
+    if (!user) {
+      return res.status(404).json({ message: "User not found" })
     }
 
-    // ✅ Get user from DB
-    const user = await User.findById(req.userId);
-    if (!user) return res.status(404).json({ message: "User not found" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" })
 
-    console.log("[chatbot] 🧠 Sending request to Gemini API...");
+    const prompt = `${SYSTEM_PROMPT}\n\nUser message: "${message}"`
 
-    // ✅ Send prompt to Gemini
-    const response = await axios.post(
-      `${GEMINI_API_URL}?key=${process.env.GEMINI_API_KEY}`,
-      {
-        contents: [
-          {
-            role: "user",
-            parts: [
-              { text: SYSTEM_PROMPT },
-              { text: `User message: "${message}"` },
-            ],
-          },
-        ],
-      },
-      { headers: { "Content-Type": "application/json" } }
-    );
+    console.log("[v0] Sending request to Gemini 2.0 Flash")
+    const result = await model.generateContent(prompt)
+    const responseText = result.response.text()
+    console.log("[v0] Gemini response received:", responseText.substring(0, 100))
 
-    // ✅ Extract response text
-    let text =
-      response.data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
-
-    if (!text) throw new Error("Empty response from Gemini API");
-
-    // ✅ Clean potential markdown
-    if (text.startsWith("```")) {
-      text = text.replace(/^```(json)?/i, "").replace(/```$/, "").trim();
-    }
-
-    // ✅ Parse JSON
-    let geminiAnalysis;
+    // Parse Gemini's JSON response
+    let geminiAnalysis
     try {
-      geminiAnalysis = JSON.parse(text);
-    } catch (e) {
-      console.error("[chatbot] ❌ Invalid JSON from Gemini:", text);
+      const cleanedResponse = responseText.trim()
+      geminiAnalysis = JSON.parse(cleanedResponse)
+    } catch (error) {
+      console.log("[v0] Failed to parse Gemini response:", responseText)
+      console.log("[v0] Parse error:", error.message)
+
       return res.status(500).json({
-        message: "Invalid response format from Gemini",
-        details: text,
-      });
+        message: "Failed to process your request. Please try again.",
+        details: "Invalid response format from AI",
+      })
     }
 
-    // ✅ Validate fields
-    if (
-      !geminiAnalysis.botResponse ||
-      !geminiAnalysis.category ||
-      typeof geminiAnalysis.isSolvable !== "boolean"
-    ) {
-      return res.status(500).json({ message: "Incomplete AI response" });
+    // Validate required fields
+    if (!geminiAnalysis.botResponse || !geminiAnalysis.category || typeof geminiAnalysis.isSolvable !== "boolean") {
+      console.log("[v0] Invalid Gemini response structure:", geminiAnalysis)
+      return res.status(500).json({ message: "Invalid response structure from AI" })
     }
 
-    let autoComplaintCreated = false;
-    let complaintId = null;
+    let autoComplaintCreated = false
+    let complaintId = null
 
-    // ✅ Auto-create complaint for unsolvable issues
     if (!geminiAnalysis.isSolvable) {
       const complaint = new Complaint({
         title: geminiAnalysis.suggestedTitle || "Service Request",
@@ -121,41 +101,63 @@ router.post("/message", verifyToken, async (req, res) => {
         priority: geminiAnalysis.priority || "medium",
         userId: req.userId,
         status: "open",
-      });
-      await complaint.save();
-      complaintId = complaint._id;
-      autoComplaintCreated = true;
+      })
+      await complaint.save()
+      complaintId = complaint._id
+      autoComplaintCreated = true
+
+      const enhancedResponse =
+        `${geminiAnalysis.botResponse}\n\n` +
+        `📋 Formal Complaint Created:\n` +
+        `• Location: ${user.address}\n` +
+        `• Area: ${user.area}\n` +
+        `• Priority: ${geminiAnalysis.priority || "medium"}\n\n` +
+        `Our team will contact you shortly. Track your complaint in the dashboard.`
+
+      const chatLog = new ChatLog({
+        userId: req.userId,
+        userMessage: message,
+        botResponse: enhancedResponse,
+        intent: geminiAnalysis.category,
+        complaintCreated: complaintId,
+      })
+      await chatLog.save()
+
+      return res.json({
+        response: enhancedResponse,
+        intent: geminiAnalysis.category,
+        isSolvable: false,
+        priority: geminiAnalysis.priority || "medium",
+        complaintCreated: complaintId,
+        autoComplaintCreated: true,
+      })
     }
 
-    const botReply = geminiAnalysis.isSolvable
-      ? geminiAnalysis.botResponse
-      : `${geminiAnalysis.botResponse}\n\n📋 Complaint Created:\n• Location: ${user.address}\n• Area: ${user.area}\n• Priority: ${geminiAnalysis.priority || "medium"}\n\nTrack it on your dashboard.`;
-
-    // ✅ Save chat log
-    await new ChatLog({
+    const chatLog = new ChatLog({
       userId: req.userId,
       userMessage: message,
-      botResponse: botReply,
+      botResponse: geminiAnalysis.botResponse,
       intent: geminiAnalysis.category,
-      complaintCreated: complaintId,
-    }).save();
+      complaintCreated: null,
+    })
+    await chatLog.save()
 
-    // ✅ Send final response
     res.json({
-      response: botReply,
+      response: geminiAnalysis.botResponse,
       intent: geminiAnalysis.category,
-      isSolvable: geminiAnalysis.isSolvable,
+      isSolvable: true,
       priority: geminiAnalysis.priority || "low",
-      autoComplaintCreated,
-      complaintCreated: complaintId,
-    });
+      complaintCreated: null,
+      autoComplaintCreated: false,
+    })
   } catch (error) {
-    console.error("[chatbot] 💥 Error:", error.message);
+    console.log("[v0] Chatbot error:", error.message)
+    console.log("[v0] Error details:", error)
     res.status(500).json({
-      message: "Chatbot failed to process your request",
+      message: "An error occurred while processing your request",
       details: error.message,
-    });
+    })
   }
-});
+})
 
-export default router;
+export default router

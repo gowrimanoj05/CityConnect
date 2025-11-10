@@ -30,9 +30,9 @@ export default function CreateComplaintPage() {
   }
 
   return (
-    <Box sx={{ maxWidth: 600, mx: "auto" }}>
-      <Paper sx={{ p: 4 }}>
-        <Typography variant="h4" sx={{ mb: 3 }}>
+    <Box sx={{ maxWidth: 600, mx: "auto", mt: 4 }}>
+      <Paper sx={{ p: 4, borderRadius: 3, boxShadow: 4 }}>
+        <Typography variant="h4" sx={{ mb: 3, fontWeight: 600 }}>
           File a New Complaint
         </Typography>
 
