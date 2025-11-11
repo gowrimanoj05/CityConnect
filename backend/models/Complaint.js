@@ -1,4 +1,4 @@
-import mongoose from "mongoose"
+import mongoose from "mongoose";
 
 const complaintSchema = new mongoose.Schema({
   title: {
@@ -11,11 +11,28 @@ const complaintSchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    enum: ["water", "electricity", "road", "sanitation", "other"],
+    enum: [
+      "water",
+      "electricity",
+      "road",
+      "sanitation",
+      "building",
+      "environment",
+      "mechanical",
+      "medical",
+      "safety",
+      "other",
+    ],
     required: true,
   },
-  address: String,
-  area: String,
+  address: {
+    type: String,
+    default: "Not specified",
+  },
+  area: {
+    type: String,
+    default: "Unknown",
+  },
   status: {
     type: String,
     enum: ["open", "in-progress", "resolved", "closed"],
@@ -23,7 +40,7 @@ const complaintSchema = new mongoose.Schema({
   },
   priority: {
     type: String,
-    enum: ["low", "medium", "high","emergency"],
+    enum: ["low", "medium", "high", "emergency"],
     default: "medium",
   },
   userId: {
@@ -31,11 +48,17 @@ const complaintSchema = new mongoose.Schema({
     ref: "User",
     required: true,
   },
-  assignedTo: mongoose.Schema.Types.ObjectId,
+  assignedTo: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+  },
   comments: [
     {
       text: String,
-      author: mongoose.Schema.Types.ObjectId,
+      author: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
       createdAt: {
         type: Date,
         default: Date.now,
@@ -46,6 +69,6 @@ const complaintSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-})
+});
 
-export default mongoose.model("Complaint", complaintSchema)
+export default mongoose.model("Complaint", complaintSchema);
